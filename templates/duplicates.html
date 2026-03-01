@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+{% block title %}Duplicates — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Duplicate Detection</h2>
+    <p>Items that may be unintentional duplicates based on ISBN or title and author</p>
+</div>
+
+<div class="help-box">
+    <strong>How this works:</strong>
+    This report flags two kinds of duplicates:
+    <ul>
+        <li><strong>ISBN matches:</strong> Items sharing the exact same ISBN — these are almost
+            certainly the same edition. Multiple copies may be intentional (high-demand titles)
+            or accidental.</li>
+        <li><strong>Title + Author matches:</strong> Items with the same title and author but
+            possibly different ISBNs. These could be different editions, different formats
+            (hardcover vs. paperback), or unintentional duplicates.</li>
+    </ul>
+    Review each group to decide whether extra copies are warranted by demand or should
+    be consolidated.
+</div>
+
+{% if dupes.total_isbn_dupes == 0 and dupes.total_ta_dupes == 0 %}
+<div class="alert alert-info">
+    No duplicates detected. Your collection has no items sharing the same ISBN or the
+    same title+author combination.
+</div>
+{% else %}
+
+<div class="export-bar">
+    <a href="{{ url_for('export_duplicates') }}" class="btn-export">Download All Duplicates CSV</a>
+</div>
+
+<div class="stat-grid">
+    {% if dupes.total_isbn_dupes > 0 %}
+    <div class="stat-card">
+        <div class="label">ISBN Duplicate Items</div>
+        <div class="value">{{ "{:,}".format(dupes.total_isbn_dupes) }}</div>
+        <div class="detail">across {{ dupes.isbn_groups | length }} ISBN groups</div>
+    </div>
+    {% endif %}
+    {% if dupes.total_ta_dupes > 0 %}
+    <div class="stat-card">
+        <div class="label">Title+Author Duplicate Items</div>
+        <div class="value">{{ "{:,}".format(dupes.total_ta_dupes) }}</div>
+        <div class="detail">across {{ dupes.title_author_groups | length }} groups</div>
+    </div>
+    {% endif %}
+</div>
+
+{% if dupes.isbn_groups %}
+<div class="card">
+    <h3>ISBN Duplicates</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 16px;">
+        Items sharing the same ISBN. Compare checkout counts and locations to decide
+        which copies to keep.
+    </p>
+    {% for group in dupes.isbn_groups[:30] %}
+    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100);">
+        <strong>ISBN {{ group.isbn }}</strong>
+        <span style="color: var(--gray-600); font-size: 13px;">({{ group.count }} copies)</span>
+        <div style="overflow-x: auto; margin-top: 8px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Author</th>
+                    <th>Call #</th>
+                    <th>Year</th>
+                    <th>Checkouts</th>
+                    <th>Format</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in group.copies %}
+                <tr>
+                    <td>{{ item.title }}</td>
+                    <td>{{ item.author }}</td>
+                    <td>{{ item.call_number }}</td>
+                    <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
+                    <td>{{ item.checkouts }}</td>
+                    <td>{{ item.format }}</td>
+                    <td>{{ item.location }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endfor %}
+    {% if dupes.isbn_groups | length > 30 %}
+    <p style="color: var(--gray-600); font-size: 13px;">
+        Showing 30 of {{ dupes.isbn_groups | length }} groups. Download the CSV for the full list.
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if dupes.title_author_groups %}
+<div class="card">
+    <h3>Title + Author Duplicates</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 16px;">
+        Items with the same title and author. May be different editions, formats,
+        or unintentional duplicates.
+    </p>
+    {% for group in dupes.title_author_groups[:30] %}
+    <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--gray-100);">
+        <strong>{{ group.title }}</strong> by {{ group.author }}
+        <span style="color: var(--gray-600); font-size: 13px;">({{ group.count }} copies)</span>
+        <div style="overflow-x: auto; margin-top: 8px;">
+        <table>
+            <thead>
+                <tr>
+                    <th>Call #</th>
+                    <th>ISBN</th>
+                    <th>Year</th>
+                    <th>Checkouts</th>
+                    <th>Format</th>
+                    <th>Location</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in group.copies %}
+                <tr>
+                    <td>{{ item.call_number }}</td>
+                    <td>{{ item.isbn }}</td>
+                    <td>{{ item.pub_year | int if item.pub_year else "" }}</td>
+                    <td>{{ item.checkouts }}</td>
+                    <td>{{ item.format }}</td>
+                    <td>{{ item.location }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+    {% endfor %}
+    {% if dupes.title_author_groups | length > 30 %}
+    <p style="color: var(--gray-600); font-size: 13px;">
+        Showing 30 of {{ dupes.title_author_groups | length }} groups. Download the CSV for the full list.
+    </p>
+    {% endif %}
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

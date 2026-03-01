@@ -19,6 +19,10 @@ from analyzer import (
     format_breakdown,
     circulation_analysis,
     weeding_candidates,
+    dormant_items,
+    find_duplicates,
+    cost_analysis,
+    collection_freshness,
 )
 from mustie import get_default_thresholds, apply_mustie, mustie_summary
 
@@ -285,6 +289,117 @@ def export_mustie():
         flagged.fillna("").to_dict("records"),
         "mustie_weeding_candidates.csv",
     )
+
+
+# ---------------------------------------------------------------------------
+# Dormant items, duplicates, cost analysis, freshness
+# ---------------------------------------------------------------------------
+
+@app.route("/dormant")
+def dormant():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    years = request.args.get("years", 3, type=int)
+    data = dormant_items(df, dormant_years=years)
+    return render_template(
+        "dormant.html", data=data, dormant_years=years,
+        total_items=len(df), filename=_current_filename,
+    )
+
+
+@app.route("/duplicates")
+def duplicates():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    data = find_duplicates(df)
+    return render_template(
+        "duplicates.html", dupes=data,
+        total_items=len(df), filename=_current_filename,
+    )
+
+
+@app.route("/cost")
+def cost():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    data = cost_analysis(df)
+    return render_template(
+        "cost.html", cost=data, filename=_current_filename,
+    )
+
+
+@app.route("/freshness")
+def freshness():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+
+    data = collection_freshness(df)
+    return render_template(
+        "freshness.html", freshness=data,
+        chart_data=json.dumps(data), filename=_current_filename,
+    )
+
+
+@app.route("/export/dormant")
+def export_dormant():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    years = request.args.get("years", 3, type=int)
+    data = dormant_items(df, dormant_years=years)
+    return _csv_response(data.get("item_list", []), "dormant_items.csv")
+
+
+@app.route("/export/duplicates")
+def export_duplicates():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    data = find_duplicates(df)
+    rows = []
+    for g in data.get("isbn_groups", []):
+        for item in g["copies"]:
+            item["dupe_type"] = "ISBN"
+            item["dupe_isbn"] = g["isbn"]
+            rows.append(item)
+    for g in data.get("title_author_groups", []):
+        for item in g["copies"]:
+            item["dupe_type"] = "Title+Author"
+            item["dupe_isbn"] = ""
+            rows.append(item)
+    return _csv_response(rows, "duplicates.csv")
+
+
+@app.route("/export/cost")
+def export_cost():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    data = cost_analysis(df)
+    return _csv_response(data.get("by_subject", []), "cost_by_subject.csv")
+
+
+@app.route("/export/freshness")
+def export_freshness():
+    df = get_df()
+    if df is None:
+        flash("Please upload a file first.", "error")
+        return redirect(url_for("upload"))
+    return _csv_response(collection_freshness(df), "collection_freshness.csv")
 
 
 @app.route("/getting-started")

@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Collection Freshness — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Collection Freshness</h2>
+    <p>How current is each subject area in your collection?</p>
+</div>
+
+<div class="help-box">
+    <strong>Reading this report:</strong>
+    Each row shows one subject area broken down by age tier. A healthy Science
+    section might have 30%+ of items from the last 5 years, while History can
+    function well with much older material. Subjects where the "Fresh" column
+    is low relative to expectations are candidates for targeted acquisitions.
+    The table is sorted by least fresh first — subjects at the top need the
+    most attention.
+</div>
+
+{% if not freshness %}
+<div class="alert alert-info">
+    Not enough data to calculate freshness. This report requires both call numbers
+    (for subject classification) and publication years.
+</div>
+{% else %}
+
+<div class="export-bar">
+    <a href="{{ url_for('export_freshness') }}" class="btn-export">Download CSV</a>
+</div>
+
+<div class="card">
+    <h3>Freshness Matrix</h3>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Items</th>
+                <th>Fresh (0-5 yrs)</th>
+                <th>Recent (6-10 yrs)</th>
+                <th>Aging (11-20 yrs)</th>
+                <th>Old (20+ yrs)</th>
+                <th>Median Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in freshness %}
+            <tr>
+                <td>{{ row.broad_class }}</td>
+                <td>{{ row.label }}</td>
+                <td>{{ row.total }}</td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 60px; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ row.fresh_pct }}%; height: 100%; background: #48bb78; border-radius: 4px;"></div>
+                        </div>
+                        <span>{{ row.fresh_pct }}%</span>
+                        <span style="color: var(--gray-600); font-size: 12px;">({{ row.fresh_count }})</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 60px; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ row.mid_pct }}%; height: 100%; background: #4299e1; border-radius: 4px;"></div>
+                        </div>
+                        <span>{{ row.mid_pct }}%</span>
+                        <span style="color: var(--gray-600); font-size: 12px;">({{ row.mid_count }})</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 60px; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ row.aging_pct }}%; height: 100%; background: #ecc94b; border-radius: 4px;"></div>
+                        </div>
+                        <span>{{ row.aging_pct }}%</span>
+                        <span style="color: var(--gray-600); font-size: 12px;">({{ row.aging_count }})</span>
+                    </div>
+                </td>
+                <td>
+                    <div style="display: flex; align-items: center; gap: 6px;">
+                        <div style="width: 60px; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden;">
+                            <div style="width: {{ row.old_pct }}%; height: 100%; background: #fc8181; border-radius: 4px;"></div>
+                        </div>
+                        <span>{{ row.old_pct }}%</span>
+                        <span style="color: var(--gray-600); font-size: 12px;">({{ row.old_count }})</span>
+                    </div>
+                </td>
+                <td>{{ row.median_age }} yrs</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

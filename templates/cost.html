@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Cost &amp; ROI — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Cost &amp; ROI Analysis</h2>
+    <p>Collection investment and return on investment by subject and format</p>
+</div>
+
+<div class="help-box">
+    <strong>What is cost-per-checkout?</strong>
+    This is a simple ROI proxy: total dollars spent on items in a subject area divided by
+    total checkouts. Lower is better — it means each checkout "costs" less. This helps
+    identify subjects where spending is high but usage is low (potential reallocation
+    candidates) and subjects where spending is efficient. Note: this only includes items
+    that have price data in your catalog export.
+</div>
+
+{% if not cost.has_data %}
+<div class="alert alert-info">
+    No price data found in your catalog. This report requires a "price" or "cost" column
+    in your catalog export. Check your ILS export settings to include replacement cost
+    or list price.
+</div>
+{% else %}
+
+<div class="export-bar">
+    <a href="{{ url_for('export_cost') }}" class="btn-export">Download CSV</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Total Investment</div>
+        <div class="value">${{ "{:,.0f}".format(cost.total_investment) }}</div>
+        <div class="detail">across {{ "{:,}".format(cost.items_with_price) }} items with price data</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Average Price</div>
+        <div class="value">${{ "{:,.2f}".format(cost.avg_price) }}</div>
+        <div class="detail">per item</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Median Price</div>
+        <div class="value">${{ "{:,.2f}".format(cost.median_price) }}</div>
+        <div class="detail">per item</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Coverage</div>
+        <div class="value">{{ (cost.items_with_price / cost.items_total * 100) | round(1) }}%</div>
+        <div class="detail">of items have price data</div>
+    </div>
+</div>
+
+{% if cost.by_subject %}
+<div class="card">
+    <h3>Investment by Subject Area</h3>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Class</th>
+                <th>Subject</th>
+                <th>Items</th>
+                <th>Total Cost</th>
+                <th>Avg Cost</th>
+                <th>Total Checkouts</th>
+                <th>Cost / Checkout</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in cost.by_subject %}
+            <tr>
+                <td>{{ row.broad_class }}</td>
+                <td>{{ row.label }}</td>
+                <td>{{ "{:,}".format(row.count) }}</td>
+                <td>${{ "{:,.0f}".format(row.total_cost) }}</td>
+                <td>${{ "{:,.2f}".format(row.avg_cost) }}</td>
+                <td>{{ "{:,.0f}".format(row.total_checkouts) }}</td>
+                <td>
+                    {% if row.cost_per_checkout is not none %}
+                    ${{ "{:,.2f}".format(row.cost_per_checkout) }}
+                    {% else %}
+                    <span style="color: var(--gray-600);">No circs</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+
+{% if cost.by_format %}
+<div class="card">
+    <h3>Investment by Format</h3>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Format</th>
+                <th>Items</th>
+                <th>Total Cost</th>
+                <th>Avg Cost</th>
+                <th>Total Checkouts</th>
+                <th>Cost / Checkout</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in cost.by_format %}
+            <tr>
+                <td>{{ row.format }}</td>
+                <td>{{ "{:,}".format(row.count) }}</td>
+                <td>${{ "{:,.0f}".format(row.total_cost) }}</td>
+                <td>${{ "{:,.2f}".format(row.avg_cost) }}</td>
+                <td>{{ "{:,.0f}".format(row.total_checkouts) }}</td>
+                <td>
+                    {% if row.cost_per_checkout is not none %}
+                    ${{ "{:,.2f}".format(row.cost_per_checkout) }}
+                    {% else %}
+                    <span style="color: var(--gray-600);">No circs</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+
+{% endif %}
+{% endblock %}

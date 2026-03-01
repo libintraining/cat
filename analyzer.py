@@ -223,3 +223,233 @@ def weeding_candidates(df: pd.DataFrame, age_threshold: int = 15,
     return candidates.sort_values(
         ["checkouts", "age"], ascending=[True, False]
     )[["title", "author", "call_number", "pub_year", "age", "checkouts", "format"]]
+
+
+def dormant_items(df: pd.DataFrame, dormant_years: int = 3) -> dict:
+    """Identify items that once circulated but have gone dormant.
+
+    An item is dormant if it has checkouts > 0 but its last checkout date
+    is more than dormant_years ago.  Also reports items with no last_checkout
+    date at all (unknown dormancy).
+    """
+    result = {"has_data": False, "dormant_years": dormant_years}
+
+    if "last_checkout" not in df.columns or df["last_checkout"].isna().all():
+        return result
+
+    result["has_data"] = True
+    now = pd.Timestamp.now()
+    cutoff = now - pd.DateOffset(years=dormant_years)
+
+    has_circ = df[df["checkouts"].fillna(0) > 0].copy()
+
+    dormant = has_circ[
+        has_circ["last_checkout"].notna()
+        & (has_circ["last_checkout"] < cutoff)
+    ].copy()
+    dormant["years_dormant"] = (
+        (now - dormant["last_checkout"]).dt.days / 365.25
+    ).round(1)
+
+    result["total_dormant"] = len(dormant)
+    result["total_with_circ"] = len(has_circ)
+
+    # Dormant items table (sorted by longest dormant first)
+    cols = ["title", "author", "call_number", "checkouts",
+            "last_checkout", "years_dormant", "format"]
+    cols = [c for c in cols if c in dormant.columns]
+    sorted_dormant = dormant.sort_values("years_dormant", ascending=False)
+    items_df = sorted_dormant[cols].head(200).copy()
+    # Format the date for display
+    if "last_checkout" in items_df.columns:
+        items_df["last_checkout"] = (
+            items_df["last_checkout"].dt.strftime("%Y-%m-%d")
+        )
+    result["item_list"] = items_df.fillna("").to_dict("records")
+
+    # Breakdown by dormancy period
+    bins = []
+    for years in [1, 2, 3, 5, 10]:
+        cut = now - pd.DateOffset(years=years)
+        count = int(has_circ[
+            has_circ["last_checkout"].notna()
+            & (has_circ["last_checkout"] < cut)
+        ].shape[0])
+        bins.append({"years": years, "count": count})
+    result["bins"] = bins
+
+    return result
+
+
+def find_duplicates(df: pd.DataFrame) -> dict:
+    """Detect duplicate items by ISBN and by title+author.
+
+    Returns two lists:
+    - isbn_dupes: groups of items sharing the same ISBN
+    - title_author_dupes: groups sharing normalized title+author
+    """
+    result = {"isbn_groups": [], "title_author_groups": [],
+              "total_isbn_dupes": 0, "total_ta_dupes": 0}
+
+    # --- ISBN duplicates ---
+    if "isbn" in df.columns and df["isbn"].notna().any():
+        isbn_df = df[df["isbn"].notna()].copy()
+        isbn_df["isbn_norm"] = isbn_df["isbn"].astype(str).str.strip().str.replace("-", "", regex=False)
+        isbn_df = isbn_df[isbn_df["isbn_norm"].str.len() > 0]
+
+        isbn_counts = isbn_df.groupby("isbn_norm").size()
+        dupe_isbns = isbn_counts[isbn_counts > 1].index
+
+        groups = []
+        for isbn in dupe_isbns:
+            items = isbn_df[isbn_df["isbn_norm"] == isbn]
+            cols = ["title", "author", "call_number", "isbn", "pub_year",
+                    "checkouts", "format", "location"]
+            cols = [c for c in cols if c in items.columns]
+            groups.append({
+                "isbn": isbn,
+                "count": len(items),
+                "copies": items[cols].fillna("").to_dict("records"),
+            })
+        result["isbn_groups"] = sorted(groups, key=lambda g: g["count"], reverse=True)
+        result["total_isbn_dupes"] = sum(g["count"] for g in groups)
+
+    # --- Title+Author duplicates ---
+    if df["title"].notna().any() and df["author"].notna().any():
+        ta_df = df[df["title"].notna() & df["author"].notna()].copy()
+        ta_df["_t"] = ta_df["title"].str.lower().str.strip()
+        ta_df["_a"] = ta_df["author"].str.lower().str.strip()
+        ta_df["_key"] = ta_df["_t"] + "|||" + ta_df["_a"]
+
+        ta_counts = ta_df.groupby("_key").size()
+        dupe_keys = ta_counts[ta_counts > 1].index
+
+        groups = []
+        for key in dupe_keys:
+            items = ta_df[ta_df["_key"] == key]
+            cols = ["title", "author", "call_number", "isbn", "pub_year",
+                    "checkouts", "format", "location"]
+            cols = [c for c in cols if c in items.columns]
+            groups.append({
+                "title": items.iloc[0]["title"],
+                "author": items.iloc[0]["author"],
+                "count": len(items),
+                "copies": items[cols].fillna("").to_dict("records"),
+            })
+        result["title_author_groups"] = sorted(
+            groups, key=lambda g: g["count"], reverse=True
+        )
+        result["total_ta_dupes"] = sum(g["count"] for g in groups)
+
+    return result
+
+
+def cost_analysis(df: pd.DataFrame) -> dict:
+    """Analyze collection investment and ROI by subject area."""
+    result = {"has_data": False}
+
+    if "price" not in df.columns or df["price"].isna().all():
+        return result
+
+    priced = df[df["price"].notna() & (df["price"] > 0)].copy()
+    if len(priced) == 0:
+        return result
+
+    result["has_data"] = True
+    result["total_investment"] = round(float(priced["price"].sum()), 2)
+    result["avg_price"] = round(float(priced["price"].mean()), 2)
+    result["median_price"] = round(float(priced["price"].median()), 2)
+    result["items_with_price"] = len(priced)
+    result["items_total"] = len(df)
+
+    # By subject area
+    if priced["lc_class"].notna().any():
+        priced["broad_class"] = priced["lc_class"].str[0]
+        by_subject = (
+            priced.groupby("broad_class")
+            .agg(
+                count=("title", "size"),
+                total_cost=("price", "sum"),
+                avg_cost=("price", "mean"),
+                total_checkouts=("checkouts", "sum"),
+            )
+            .reset_index()
+        )
+        by_subject["total_cost"] = by_subject["total_cost"].round(2)
+        by_subject["avg_cost"] = by_subject["avg_cost"].round(2)
+        by_subject["total_checkouts"] = by_subject["total_checkouts"].fillna(0)
+        # Cost per checkout (ROI proxy) — lower is better
+        by_subject["cost_per_checkout"] = by_subject.apply(
+            lambda r: round(r["total_cost"] / r["total_checkouts"], 2)
+            if r["total_checkouts"] > 0 else None,
+            axis=1,
+        )
+        by_subject["label"] = by_subject["broad_class"].map(
+            lambda x: LC_CLASS_LABELS.get(x, "Unknown")
+        )
+        result["by_subject"] = by_subject.sort_values(
+            "total_cost", ascending=False
+        ).to_dict("records")
+
+    # By format
+    if priced["format"].notna().any():
+        by_format = (
+            priced.groupby("format")
+            .agg(
+                count=("title", "size"),
+                total_cost=("price", "sum"),
+                avg_cost=("price", "mean"),
+                total_checkouts=("checkouts", "sum"),
+            )
+            .reset_index()
+        )
+        by_format["total_cost"] = by_format["total_cost"].round(2)
+        by_format["avg_cost"] = by_format["avg_cost"].round(2)
+        by_format["total_checkouts"] = by_format["total_checkouts"].fillna(0)
+        by_format["cost_per_checkout"] = by_format.apply(
+            lambda r: round(r["total_cost"] / r["total_checkouts"], 2)
+            if r["total_checkouts"] > 0 else None,
+            axis=1,
+        )
+        result["by_format"] = by_format.sort_values(
+            "total_cost", ascending=False
+        ).to_dict("records")
+
+    return result
+
+
+def collection_freshness(df: pd.DataFrame) -> list[dict]:
+    """Freshness matrix: for each subject, what % is from the last 5, 10, and 10+ years."""
+    current_year = datetime.now().year
+
+    if df["lc_class"].isna().all() or df["pub_year"].isna().all():
+        return []
+
+    valid = df[df["lc_class"].notna() & df["pub_year"].notna()].copy()
+    valid["broad_class"] = valid["lc_class"].str[0]
+    valid["age"] = current_year - valid["pub_year"]
+
+    rows = []
+    for cls, group in valid.groupby("broad_class"):
+        total = len(group)
+        fresh = int((group["age"] <= 5).sum())
+        mid = int(((group["age"] > 5) & (group["age"] <= 10)).sum())
+        aging = int(((group["age"] > 10) & (group["age"] <= 20)).sum())
+        old = int((group["age"] > 20).sum())
+
+        rows.append({
+            "broad_class": cls,
+            "label": LC_CLASS_LABELS.get(cls, "Unknown"),
+            "total": total,
+            "fresh_count": fresh,
+            "fresh_pct": round(fresh / total * 100, 1) if total else 0,
+            "mid_count": mid,
+            "mid_pct": round(mid / total * 100, 1) if total else 0,
+            "aging_count": aging,
+            "aging_pct": round(aging / total * 100, 1) if total else 0,
+            "old_count": old,
+            "old_pct": round(old / total * 100, 1) if total else 0,
+            "median_age": round(float(group["age"].median()), 1),
+        })
+
+    return sorted(rows, key=lambda r: r["fresh_pct"])

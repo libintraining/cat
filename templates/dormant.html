@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% block title %}Dormant Items — Collection Analyzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h2>Dormant Items</h2>
+    <p>Items that circulated in the past but haven't been checked out recently</p>
+</div>
+
+<div class="help-box">
+    <strong>Why track dormancy?</strong>
+    An item with 10 lifetime checkouts looks healthy — until you notice the last
+    checkout was 8 years ago. Dormancy analysis catches items that were once popular
+    but have silently fallen out of use, which raw checkout counts miss entirely.
+    These are strong weeding candidates that total-checkout reports overlook.
+</div>
+
+<div class="card">
+    <h3>Dormancy Threshold</h3>
+    <form class="inline-form" method="GET">
+        <label>Not checked out in the last</label>
+        <input type="number" name="years" value="{{ dormant_years }}" min="1" max="20">
+        <label>years</label>
+        <button type="submit" class="btn btn-sm">Update</button>
+    </form>
+</div>
+
+{% if not data.has_data %}
+<div class="alert alert-info">
+    No last-checkout dates found in your data. This report requires a "last checkout date"
+    column in your catalog export. Check your ILS export settings.
+</div>
+{% elif data.total_dormant == 0 %}
+<div class="alert alert-info">
+    No dormant items found with the current threshold.
+</div>
+{% else %}
+<div class="export-bar">
+    <a href="{{ url_for('export_dormant', years=dormant_years) }}" class="btn-export">Download CSV</a>
+</div>
+
+<div class="stat-grid">
+    <div class="stat-card">
+        <div class="label">Dormant Items</div>
+        <div class="value">{{ "{:,}".format(data.total_dormant) }}</div>
+        <div class="detail">had checkouts but none in {{ dormant_years }}+ years</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Items with Circulation</div>
+        <div class="value">{{ "{:,}".format(data.total_with_circ) }}</div>
+        <div class="detail">total items that have circulated at least once</div>
+    </div>
+    <div class="stat-card">
+        <div class="label">Dormancy Rate</div>
+        <div class="value">{{ (data.total_dormant / data.total_with_circ * 100) | round(1) }}%</div>
+        <div class="detail">of circulated items are now dormant</div>
+    </div>
+</div>
+
+{% if data.bins %}
+<div class="card">
+    <h3>Dormancy by Time Period</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+        How many items have gone quiet at each time horizon.
+    </p>
+    <table>
+        <thead>
+            <tr>
+                <th>Not Used In</th>
+                <th>Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for bin in data.bins %}
+            <tr>
+                <td>{{ bin.years }}+ years</td>
+                <td>{{ "{:,}".format(bin.count) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<div class="card">
+    <h3>Dormant Items</h3>
+    <p style="color: var(--gray-600); font-size: 13px; margin-bottom: 12px;">
+        Sorted by longest dormant first.
+        {% if data.total_dormant > 200 %}Showing first 200 — download CSV for the full list.{% endif %}
+    </p>
+    <div style="overflow-x: auto;">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Call #</th>
+                <th>Checkouts</th>
+                <th>Last Checkout</th>
+                <th>Years Dormant</th>
+                <th>Format</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in data.item_list %}
+            <tr>
+                <td>{{ item.title }}</td>
+                <td>{{ item.author }}</td>
+                <td>{{ item.call_number }}</td>
+                <td>{{ item.checkouts }}</td>
+                <td>{{ item.last_checkout }}</td>
+                <td>{{ item.years_dormant }}</td>
+                <td>{{ item.format }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
