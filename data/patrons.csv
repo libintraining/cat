@@ -1,0 +1,31 @@
+patron_id,barcode,patron_type,last_name,first_name,middle_initial,date_of_birth,email,phone,address_street,address_city,address_state,address_zip,registration_date,expiration_date,patron_status,total_checkouts,total_fines_accrued,fines_outstanding,home_branch,preferred_language,notification_preference,notes
+PAT000001,29012000100001,Adult,Rivera,Maria,L,1985-06-14,mrivera@email.com,555-0101,742 Elm Street,Springfield,IL,62701,2019-04-01,2026-03-31,Active,87,12.50,0.00,MAIN,eng,Email,
+PAT000002,29012000100002,Adult,Chen,David,W,1978-11-23,dchen@email.com,555-0102,1501 Oak Avenue,Springfield,IL,62702,2019-04-01,2026-03-31,Active,134,8.75,2.50,MAIN,eng,Email,
+PAT000003,29012000100003,Adult,Okonkwo,Chioma,,1990-03-08,cokonkwo@email.com,555-0103,88 Maple Drive,Springfield,IL,62703,2019-05-15,2026-05-14,Active,62,5.00,0.00,EAST,eng,Email,
+PAT000004,29012000100004,Senior,Kowalski,Helen,M,1948-09-30,hkowalski@email.com,555-0104,2200 Pine Road,Springfield,IL,62704,2019-04-01,2026-03-31,Active,203,0.00,0.00,MAIN,eng,Phone,Senior discount applies
+PAT000005,29012000100005,Student,Patel,Ananya,,2003-01-17,apatel@university.edu,555-0105,450 University Ave; Apt 12B,Springfield,IL,62701,2022-08-20,2026-05-31,Active,45,18.50,5.25,MAIN,eng,Email,University student
+PAT000006,29012000100006,Adult,Thompson,James,R,1982-04-22,jthompson@email.com,555-0106,3301 Birch Lane,Springfield,IL,62702,2019-06-10,2026-06-09,Active,71,22.00,0.00,WEST,eng,Email,
+PAT000007,29012000100007,Juvenile,Martinez,Sofia,,2012-08-05,,555-0107,742 Elm Street,Springfield,IL,62701,2019-09-01,2026-08-31,Active,156,3.00,0.00,MAIN,eng,Email,Parent/guardian: Carlos Martinez
+PAT000008,29012000100008,Adult,Abrams,Rachel,K,1975-12-11,rabrams@email.com,555-0108,567 Cedar Court,Springfield,IL,62703,2019-04-01,2026-03-31,Active,95,9.25,0.00,EAST,eng,Email,
+PAT000009,29012000100009,Student,Nguyen,Minh,T,2001-07-29,mnguyen@university.edu,555-0109,450 University Ave; Apt 8A,Springfield,IL,62701,2023-01-10,2026-12-31,Active,38,31.50,10.00,MAIN,vie,Email,University student - overdue notices sent
+PAT000010,29012000100010,Adult,Washington,Marcus,D,1988-02-14,mwashington@email.com,555-0110,1122 Walnut Street,Springfield,IL,62704,2019-07-20,2026-07-19,Active,48,6.00,0.00,MAIN,eng,Text,
+PAT000011,29012000100011,Adult,Kim,Soo-Jin,,1992-10-03,sjkim@email.com,555-0111,890 Spruce Avenue,Springfield,IL,62701,2020-01-15,2026-01-14,Active,54,0.00,0.00,MAIN,kor,Email,
+PAT000012,29012000100012,Juvenile,Chen,Emily,,2010-04-18,,555-0102,1501 Oak Avenue,Springfield,IL,62702,2019-04-01,2026-03-31,Active,189,7.50,1.00,MAIN,eng,Email,Parent/guardian: David Chen (PAT000002)
+PAT000013,29012000100013,Adult,O'Brien,Patrick,J,1970-08-25,pobrien@email.com,555-0113,445 Hickory Lane,Springfield,IL,62702,2019-04-01,2025-03-31,Expired,112,15.00,4.75,WEST,eng,Phone,Card expired - renewal notice sent
+PAT000014,29012000100014,Student,Gutierrez,Isabella,,2002-12-01,igutierrez@university.edu,555-0114,1200 College Blvd; Room 305,Springfield,IL,62701,2023-08-15,2027-05-31,Active,29,2.00,0.00,MAIN,spa,Email,University student
+PAT000015,29012000100015,Adult,Yamamoto,Kenji,,1986-05-19,kyamamoto@email.com,555-0115,2345 Ash Street,Springfield,IL,62703,2019-08-01,2026-07-31,Active,76,4.50,0.00,EAST,jpn,Email,
+PAT000016,29012000100016,Homebound,Franklin,Dorothy,A,1940-02-28,dfranklin@email.com,555-0116,78 Rosewood Circle,Springfield,IL,62704,2019-04-01,2026-03-31,Active,67,0.00,0.00,MAIN,eng,Phone,Homebound delivery service - biweekly
+PAT000017,29012000100017,Adult,Sharma,Priya,,1994-09-12,psharma@email.com,555-0117,1670 Magnolia Drive,Springfield,IL,62701,2020-03-05,2026-03-04,Active,41,8.00,3.50,MAIN,hin,Email,
+PAT000018,29012000100018,Teen,Okonkwo,Emeka,,2008-11-07,,555-0103,88 Maple Drive,Springfield,IL,62703,2019-05-15,2026-05-14,Active,98,2.00,0.00,EAST,eng,Email,Parent/guardian: Chioma Okonkwo (PAT000003)
+PAT000019,29012000100019,Adult,Anderson,Lisa,M,1980-07-16,landerson@email.com,555-0119,3450 Poplar Road,Springfield,IL,62702,2019-04-01,2026-03-31,Active,83,11.00,0.00,WEST,eng,Email,
+PAT000020,29012000100020,Institutional,Springfield Public Schools,,,,,555-0120,100 Education Drive,Springfield,IL,62701,2019-09-01,2026-08-31,Active,342,0.00,0.00,MAIN,eng,Email,Institutional borrower - 100 item limit
+PAT000021,29012000100021,Adult,Dubois,Antoine,,1983-03-30,adubois@email.com,555-0121,567 Chestnut Avenue,Springfield,IL,62704,2019-10-15,2026-10-14,Active,59,7.00,0.00,MAIN,fre,Email,
+PAT000022,29012000100022,Adult,Park,Ji-Hoon,,1991-06-08,jhpark@email.com,555-0122,2100 Willow Way,Springfield,IL,62701,2020-06-20,2026-06-19,Active,33,0.00,0.00,MAIN,kor,Text,
+PAT000023,29012000100023,Student,Al-Rashid,Fatima,,2000-04-25,falrashid@university.edu,555-0123,450 University Ave; Apt 3C,Springfield,IL,62701,2022-08-20,2026-05-31,Active,52,14.00,7.25,MAIN,ara,Email,University student
+PAT000024,29012000100024,Adult,Jackson,Terrance,L,1976-01-09,tjackson@email.com,555-0124,890 Sycamore Street,Springfield,IL,62703,2019-04-01,2026-03-31,Active,91,19.50,0.00,EAST,eng,Email,
+PAT000025,29012000100025,Adult,Lindgren,Astrid,E,1987-08-21,alindgren@email.com,555-0125,1450 Linden Lane,Springfield,IL,62702,2019-11-01,2026-10-31,Active,44,3.00,0.00,WEST,swe,Email,
+PAT000026,29012000100026,Adult,Moreau,Celeste,,1995-10-30,cmoreau@email.com,555-0126,2780 Juniper Court,Springfield,IL,62704,2021-02-10,2027-02-09,Active,27,0.00,0.00,MAIN,fre,Email,
+PAT000027,29012000100027,Juvenile,Thompson,Aiden,,2013-05-12,,555-0106,3301 Birch Lane,Springfield,IL,62702,2020-09-01,2026-08-31,Active,73,1.50,0.00,WEST,eng,Email,Parent/guardian: James Thompson (PAT000006)
+PAT000028,29012000100028,Adult,Herrera,Carlos,,1972-03-18,cherrera@email.com,555-0128,456 Dogwood Avenue,Springfield,IL,62701,2019-04-01,2026-03-31,Active,108,25.00,0.00,MAIN,spa,Phone,
+PAT000029,29012000100029,Staff,Mitchell,Sarah,J,1984-07-04,smitchell@springfieldlib.org,555-0129,1234 Library Lane,Springfield,IL,62701,2019-03-01,2027-12-31,Active,156,0.00,0.00,MAIN,eng,Email,Library staff - extended loan periods
+PAT000030,29012000100030,Adult,Petrov,Nikolai,,1989-12-25,npetrov@email.com,555-0130,3100 Redwood Drive,Springfield,IL,62703,2020-08-14,2026-08-13,Active,36,5.50,0.00,EAST,rus,Email,
